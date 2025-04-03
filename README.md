@@ -1,5 +1,4 @@
 ## apollo config C++(20) client
-apollo config's c++(20) client
 
 ### apollo or nacos
 - 两个最小化部署简单试用了一下
@@ -20,8 +19,16 @@ apollo config's c++(20) client
 
 - **其他**
   - 熔断器（circuit breaker）
-  - callback thread pool TODO: 线程池已经实现，但是总觉得这里放一个线程池有点重，期望是做成切片的方式，由外部决定 callback 怎么处理，但是又会涉及另一个问题如果外部是阻塞的，那么代码里的那个锁会很长。
+  - `callback thread pool` TODO: 线程池已经实现，但是总觉得这里放一个线程池有点重，期望是做成切片的方式，由外部决定 callback 怎么处理，但是又会涉及另一个问题如果外部是阻塞的，那么代码里的那个锁会很长。
   - 而且这里涉及一次数据拷贝，暂时还没太想好怎么做才最好 （`trigger_callbacks` 函数调用 `cb(key, value);` 的地方）
+
+- **过程中的问题记录**
+  - `apollo` 服务端 status = 304 时没有 body，`cpp-httplib` 不设置 `response function` 的情况下会取不到 `304` 这个 status code，考虑了下还是需要就加上了
+  - `apollo` 的返回 header 里没有 `content-length` .... 不太友好 `response_body` 的 `reserve` 没有意义了（还是保留在这里了，之后看下 apollo 实现看能不能改掉）
+  - `cpp-httplib` 里的 `encode_url` 结果对 `apollo` 是不够的，所以有了这个函数：`strict_url_encode`
+  - `apollo` 有更新再拉取的时候也是全量的，一度考虑做个比较器，比较后只 callback 增量给应用方....（暂时还没有实现，`namespace_data` 结构里保留了 notification_id、messages 信息，应该可以用这两个信息先对比下再看是否要遍历区分这个namespace里是否有更新）
+  - `process_config_response` 的实现是直接替换了整个 `namespace_data`, 主要是省事，后面 `process_notifications` 会再把 `notificationId`, `messages` 信息更新掉，再次 `fetch_config` 时没有变更也会只得到 `304` 的 status code
+
 
 ### 依赖要求
 - C++20 编译器
