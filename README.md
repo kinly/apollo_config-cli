@@ -71,6 +71,12 @@ void apollo_test() {
 
 ### 其他
 
+#### update message
+- 2025-04-08 把 nlohmann json 替换成了 simdjson。最开始理解错误了 simdjson 的 iterate_many 接口，以为是增量解析的；issue 里看到了一些关于增量解析的讨论，期望后续有相关实现
+  - https://github.com/simdjson/simdjson/issues/128
+  - https://github.com/simdjson/simdjson/issues/1356
+  - https://github.com/simdjson/simdjson/issues/1135
+
 #### 熔断器
 - 这个熔断器比较简单，失败超过一定次数就以幂值延长等待时间
 
